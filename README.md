@@ -1,453 +1,617 @@
-# Voting System in Go
+# Sistema de Votación en Go con Múltiples Bases de Datos
 
-This project implements a simple voting system using Go with a REST API, token authentication, and Swagger documentation.
+Este proyecto implementa un sistema de votación completo usando Go con soporte para **MySQL**, **PostgreSQL** y **MongoDB**. Incluye API REST, autenticación por tokens y documentación Swagger.
 
-## Features
+## 📋 Características
 
-### REST API
+### Soporte Multi-Base de Datos
 
-- User registration with encrypted passwords (bcrypt)
-- Login/Logout with token authentication
-- Candidate listing
-- Voting system (one vote per user)
-- Results visualization
-- Interactive documentation with Swagger UI
+- ✅ **MySQL** (predeterminado)
+- ✅ **PostgreSQL**
+- ✅ **MongoDB**
+- Cambio de base de datos mediante variable de entorno
+- Interfaz unificada para todas las bases de datos
 
-### Web Interface
+### API REST
 
-- Modern interface with Bootstrap 5
-- Registration and login
-- Candidate visualization
-- Intuitive voting system
-- Real-time results with charts
+- Registro de usuarios con contraseñas encriptadas (bcrypt)
+- Login/Logout con autenticación por tokens
+- Listado de candidatos
+- Sistema de votación (un voto por usuario)
+- Visualización de resultados
+- Documentación interactiva con Swagger UI
 
-## Installation and Execution
+### Interfaz Web
 
-### Prerequisites
+- Interfaz bilingüe (Inglés/Español)
+- Bootstrap 5 responsive
+- Registro e inicio de sesión
+- Visualización de candidatos
+- Sistema de votación intuitivo
+- Resultados en tiempo real con gráficos
 
-- Go 1.16 or higher
+## Instalación Rápida
 
-### Installation Steps
-
-1. **Clone or create the project**
+### Opción 1: Script Automático (Recomendado)
 
 ```bash
-mkdir voting-system
-cd voting-system
+# Dar permisos de ejecución al script
+chmod +x setup_database.sh
+
+# Ejecutar el script
+./setup_database.sh
 ```
 
-2. **Save the server code** in `main.go`
+El script te permitirá elegir:
 
-3. **Initialize the Go module and install dependencies**
+1. MySQL
+2. PostgreSQL
+3. MongoDB
+4. Todas las bases de datos
+
+El script automáticamente:
+
+- Detecta tu sistema operativo (macOS/Linux)
+- Instala la(s) base(s) de datos seleccionada(s)
+- Crea base de datos y usuario
+- Instala dependencias de Go
+- Crea archivo `.env` con la configuración
+- Crea script `run.sh` para ejecutar la aplicación
+
+### Opción 2: Instalación Manual
+
+#### Prerequisitos
+
+- Go 1.16+
+- Una de las siguientes bases de datos:
+  - MySQL 5.7+ / MariaDB 10.3+
+  - PostgreSQL 12+
+  - MongoDB 4.4+
+
+#### Pasos
+
+1. **Instalar dependencias de Go**
 
 ```bash
 go mod init voting-system
+go get github.com/go-sql-driver/mysql
+go get github.com/lib/pq
+go get go.mongodb.org/mongo-driver/mongo
 go get golang.org/x/crypto/bcrypt
 ```
 
-4. **Run the server**
+2. **Configurar base de datos** (ver sección de configuración específica abajo)
+
+3. **Crear archivo .env**
 
 ```bash
+DB_TYPE=mysql          # mysql, postgresql, o mongodb
+DB_USER=voting_user
+DB_PASSWORD=voting_password
+DB_HOST=localhost
+DB_PORT=3306          # 3306 para MySQL, 5432 para PostgreSQL, 27017 para MongoDB
+DB_NAME=voting_system
+```
+
+4. **Ejecutar aplicación**
+
+```bash
+source .env
 go run main.go
 ```
 
-The server will start at `http://127.0.0.1:8000`
+## 💾 Configuración por Base de Datos
 
-### Run the web interface
+### MySQL
 
-1. **Save the HTML file** as `index.html`
+**Instalación:**
 
-2. **Open in the browser** (any of these options):
+```bash
+# macOS
+brew install mysql
+brew services start mysql
 
-   - Directly: Double-click on `index.html`
-   - With Python server:
-     ```bash
-     python -m http.server 3000
-     # Open http://localhost:3000
-     ```
-   - With Node.js:
-     ```bash
-     npx http-server -p 3000
-     # Open http://localhost:3000
-     ```
+# Ubuntu/Debian
+sudo apt-get install mysql-server
+sudo systemctl start mysql
+```
 
-## API Documentation
+**Configuración:**
+
+```bash
+mysql -u root -p
+
+CREATE DATABASE voting_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'voting_user'@'localhost' IDENTIFIED BY 'voting_password';
+GRANT ALL PRIVILEGES ON voting_system.* TO 'voting_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+**Variables de entorno:**
+
+```bash
+export DB_TYPE=mysql
+export DB_PORT=3306
+```
+
+### PostgreSQL
+
+**Instalación:**
+
+```bash
+# macOS
+brew install postgresql@14
+brew services start postgresql@14
+
+# Ubuntu/Debian
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**Configuración:**
+
+```bash
+# macOS
+createdb voting_system
+psql -d voting_system
+
+# Linux
+sudo -u postgres psql
+
+CREATE DATABASE voting_system;
+CREATE USER voting_user WITH PASSWORD 'voting_password';
+GRANT ALL PRIVILEGES ON DATABASE voting_system TO voting_user;
+\c voting_system
+GRANT ALL ON SCHEMA public TO voting_user;
+\q
+```
+
+**Variables de entorno:**
+
+```bash
+export DB_TYPE=postgresql
+export DB_PORT=5432
+```
+
+### MongoDB
+
+**Instalación:**
+
+```bash
+# macOS
+brew tap mongodb/brew
+brew install mongodb-community
+brew services start mongodb-community
+
+# Ubuntu/Debian
+wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -cs)/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+sudo systemctl start mongod
+```
+
+**Configuración:**
+
+```bash
+# MongoDB no requiere configuración adicional
+# La base de datos se crea automáticamente
+```
+
+**Variables de entorno:**
+
+```bash
+export DB_TYPE=mongodb
+export DB_PORT=27017
+# DB_USER y DB_PASSWORD son opcionales para MongoDB sin autenticación
+```
+
+## 🏃 Ejecución
+
+### Usando el script (si usaste setup_database.sh)
+
+```bash
+./run.sh
+```
+
+### Manual
+
+```bash
+# Cargar variables de entorno
+source .env
+
+# O exportar manualmente
+export DB_TYPE=mysql
+export DB_USER=voting_user
+export DB_PASSWORD=voting_password
+export DB_HOST=localhost
+export DB_PORT=3306
+export DB_NAME=voting_system
+
+# Ejecutar
+go run main.go
+```
+
+La aplicación:
+
+- Se conectará a la base de datos configurada
+- Creará las tablas/colecciones automáticamente
+- Poblará candidatos iniciales (Alice Johnson, Bob Smith, Charlie Brown)
+- Iniciará el servidor en el puerto 8000
+
+## 📚 Acceso a la Aplicación
 
 ### Swagger UI
 
-Once the server is running, access:
+http://127.0.0.1:8000/swagger/
 
-- **Swagger UI:** http://127.0.0.1:8000/swagger/
-- **OpenAPI Specification:** http://127.0.0.1:8000/api/swagger.json
+### Interfaz Web
 
-## API Endpoints
+Abrir `index.html` en el navegador
 
-### Authentication
+### API Base URL
 
-#### Register User
+http://127.0.0.1:8000/api/
 
-```http
-POST /api/register/
-Content-Type: application/json
+## 🔌 Endpoints de la API
 
-{
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "securepass123"
-}
-```
+### Autenticación
 
-**Successful response (201):**
-
-```json
-{
-  "id": 1,
-  "username": "john_doe",
-  "email": "john@example.com",
-  "has_voted": false
-}
-```
-
-#### Log In
-
-```http
-POST /api/login/
-Content-Type: application/json
-
-{
-  "username": "john_doe",
-  "password": "securepass123"
-}
-```
-
-**Successful response (200):**
-
-```json
-{
-  "token": "a1b2c3d4e5f6...",
-  "user": {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com",
-    "has_voted": false
-  }
-}
-```
-
-#### Log Out
-
-```http
-POST /api/logout/
-Authorization: Token <your_token>
-```
-
-**Successful response (200):**
-
-```json
-{
-  "message": "Successfully logged out"
-}
-```
-
-### Voting
-
-#### List Candidates
-
-```http
-GET /api/candidates/
-Authorization: Token <your_token>
-```
-
-**Successful response (200):**
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Alice Johnson"
-  },
-  {
-    "id": 2,
-    "name": "Bob Smith"
-  },
-  {
-    "id": 3,
-    "name": "Charlie Brown"
-  }
-]
-```
-
-#### Cast Vote
-
-```http
-POST /api/vote/
-Authorization: Token <your_token>
-Content-Type: application/json
-
-{
-  "candidate": 1
-}
-```
-
-**Successful response (201):**
-
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "candidate_id": 1,
-  "created_at": "2025-10-29T10:30:00Z"
-}
-```
-
-**Error - Already voted (400):**
-
-```json
-{
-  "error": "user has already voted"
-}
-```
-
-#### View Results
-
-```http
-GET /api/results/
-Authorization: Token <your_token>
-```
-
-**Successful response (200):**
-
-```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "candidate_id": 1,
-    "created_at": "2025-10-29T10:30:00Z"
-  },
-  {
-    "id": 2,
-    "user_id": 2,
-    "candidate_id": 2,
-    "created_at": "2025-10-29T10:35:00Z"
-  }
-]
-```
-
-## Testing with cURL
-
-### Full test flow
-
-#### 1. Register a user
+**Registrar Usuario:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/register/ \
   -H "Content-Type: application/json" \
-  -d
-    "username": "alice",
-    "email": "alice@example.com",
-    "password": "password123"
-
+  -d '{"username":"alice","email":"alice@example.com","password":"password123"}'
 ```
 
-#### 2. Log in
+**Iniciar Sesión:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/login/ \
   -H "Content-Type: application/json" \
-  -d
-    "username": "alice",
-    "password": "password123"
-
+  -d '{"username":"alice","password":"password123"}'
 ```
 
-**Save the token you receive in the response**
-
-#### 3. View candidates
-
-```bash
-curl -X GET http://127.0.0.1:8000/api/candidates/ \
-  -H "Authorization: Token YOUR_TOKEN_HERE"
-```
-
-#### 4. Cast vote
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/vote/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Token YOUR_TOKEN_HERE" \
-  -d
-    "candidate": 1
-
-```
-
-#### 5. View results
-
-```bash
-curl -X GET http://127.0.0.1:8000/api/results/ \
-  -H "Authorization: Token YOUR_TOKEN_HERE"
-```
-
-#### 6. Log out
+**Cerrar Sesión:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/logout/ \
   -H "Authorization: Token YOUR_TOKEN_HERE"
 ```
 
-### Full test script
+### Votación
+
+**Listar Candidatos:**
+
+```bash
+curl -X GET http://127.0.0.1:8000/api/candidates/ \
+  -H "Authorization: Token YOUR_TOKEN_HERE"
+```
+
+**Emitir Voto:**
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/vote/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Token YOUR_TOKEN_HERE" \
+  -d '{"candidate":1}'
+```
+
+**Ver Resultados:**
+
+```bash
+curl -X GET http://127.0.0.1:8000/api/results/ \
+  -H "Authorization: Token YOUR_TOKEN_HERE"
+```
+
+## 🔄 Cambiar de Base de Datos
+
+Para cambiar entre bases de datos, simplemente modifica la variable `DB_TYPE`:
+
+```bash
+# Cambiar a PostgreSQL
+export DB_TYPE=postgresql
+export DB_PORT=5432
+
+# Cambiar a MongoDB
+export DB_TYPE=mongodb
+export DB_PORT=27017
+
+# Cambiar a MySQL
+export DB_TYPE=mysql
+export DB_PORT=3306
+
+# Ejecutar
+go run main.go
+```
+
+O edita el archivo `.env`:
+
+```bash
+DB_TYPE=postgresql  # mysql, postgresql, o mongodb
+```
+
+## 🏗️ Arquitectura
+
+### Estructura del Proyecto
+
+```
+voting-system/
+├── main.go              # Código principal con soporte multi-DB
+├── setup_database.sh    # Script de configuración automática
+├── run.sh              # Script para ejecutar la aplicación
+├── index.html          # Interfaz web bilingüe
+├── .env                # Variables de entorno
+├── go.mod              # Dependencias de Go
+├── go.sum              # Checksums de dependencias
+└── README.md           # Esta documentación
+```
+
+### Tecnologías
+
+**Backend:**
+
+- Go (Golang)
+- MySQL Driver: `github.com/go-sql-driver/mysql`
+- PostgreSQL Driver: `github.com/lib/pq`
+- MongoDB Driver: `go.mongodb.org/mongo-driver/mongo`
+- bcrypt para encriptación
+
+**Frontend:**
+
+- HTML5
+- Bootstrap 5
+- JavaScript (Vanilla)
+- Sistema bilingüe (EN/ES)
+
+## 📊 Esquemas de Base de Datos
+
+### MySQL / PostgreSQL
+
+**users**
+
+```sql
+id            INT/SERIAL PRIMARY KEY
+username      VARCHAR(100) UNIQUE NOT NULL
+email         VARCHAR(255) NOT NULL
+password      VARCHAR(255) NOT NULL
+has_voted     BOOLEAN DEFAULT FALSE
+created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+**candidates**
+
+```sql
+id            INT/SERIAL PRIMARY KEY
+name          VARCHAR(255) NOT NULL
+created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+**votes**
+
+```sql
+id            INT/SERIAL PRIMARY KEY
+user_id       INT NOT NULL (FK -> users.id)
+candidate_id  INT NOT NULL (FK -> candidates.id)
+created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+UNIQUE(user_id)
+```
+
+**tokens**
+
+```sql
+id            INT/SERIAL PRIMARY KEY
+user_id       INT NOT NULL (FK -> users.id)
+token         VARCHAR(255) UNIQUE NOT NULL
+created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+INDEX(token)
+```
+
+### MongoDB
+
+**Colecciones:**
+
+- `users` - Usuarios con índice único en username
+- `candidates` - Candidatos
+- `votes` - Votos con índice único en user_id
+- `tokens` - Tokens de autenticación con índice único en token
+
+## 🐳 Docker Setup (Opcional)
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  # MySQL
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: voting_system
+      MYSQL_USER: voting_user
+      MYSQL_PASSWORD: voting_password
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # PostgreSQL
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: voting_system
+      POSTGRES_USER: voting_user
+      POSTGRES_PASSWORD: voting_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # MongoDB
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mysql_data:
+  postgres_data:
+  mongodb_data:
+```
+
+### Ejecutar con Docker
+
+```bash
+# Iniciar base de datos específica
+docker-compose up -d mysql      # Solo MySQL
+docker-compose up -d postgres   # Solo PostgreSQL
+docker-compose up -d mongodb    # Solo MongoDB
+
+# O todas
+docker-compose up -d
+
+# Ejecutar aplicación
+export DB_TYPE=mysql  # o postgresql, mongodb
+go run main.go
+```
+
+## 🧪 Testing Completo
+
+### Script de prueba automatizado
 
 ```bash
 #!/bin/bash
 
 API_URL="http://127.0.0.1:8000"
 
-echo "1. Registering user..."
+echo "1. Registrando usuario..."
 curl -s -X POST $API_URL/api/register/ \
   -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"test123"}' | jq
+  -d '{"username":"testuser","email":"test@example.com","password":"test123"}'
 
-echo -e "\n2. Logging in..."
+echo -e "\n2. Iniciando sesión..."
 RESPONSE=$(curl -s -X POST $API_URL/api/login/ \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"test123"}')
 
-TOKEN=$(echo $RESPONSE | jq -r '.token')
-echo "Token obtained: $TOKEN"
+TOKEN=$(echo $RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+echo "Token: $TOKEN"
 
-echo -e "\n3. Getting candidates..."
+echo -e "\n3. Listando candidatos..."
 curl -s -X GET $API_URL/api/candidates/ \
-  -H "Authorization: Token $TOKEN" | jq
+  -H "Authorization: Token $TOKEN"
 
-echo -e "\n4. Voting for candidate 1..."
+echo -e "\n4. Votando..."
 curl -s -X POST $API_URL/api/vote/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Token $TOKEN" \
-  -d '{"candidate":1}' | jq
+  -d '{"candidate":1}'
 
-echo -e "\n5. Viewing results..."
+echo -e "\n5. Viendo resultados..."
 curl -s -X GET $API_URL/api/results/ \
-  -H "Authorization: Token $TOKEN" | jq
+  -H "Authorization: Token $TOKEN"
 
-echo -e "\n6. Logging out..."
+echo -e "\n6. Cerrando sesión..."
 curl -s -X POST $API_URL/api/logout/ \
-  -H "Authorization: Token $TOKEN" | jq
+  -H "Authorization: Token $TOKEN"
 ```
 
-Save the script as `test.sh`, give it execution permissions, and run it:
+## 🔐 Seguridad
+
+- ✅ Contraseñas encriptadas con bcrypt
+- ✅ Autenticación basada en tokens
+- ✅ Tokens criptográficamente seguros
+- ✅ Prepared statements (prevención SQL injection)
+- ✅ Transacciones ACID para integridad
+- ✅ Un voto por usuario (constraint)
+- ✅ CORS habilitado para desarrollo
+
+## 📈 Comparación de Bases de Datos
+
+| Característica           | MySQL           | PostgreSQL             | MongoDB               |
+| ------------------------ | --------------- | ---------------------- | --------------------- |
+| Tipo                     | Relacional      | Relacional             | NoSQL                 |
+| Transacciones            | ✅              | ✅                     | ✅                    |
+| ACID                     | ✅              | ✅                     | ✅                    |
+| Joins                    | ✅              | ✅                     | ❌                    |
+| Esquema flexible         | ❌              | ❌                     | ✅                    |
+| Rendimiento lectura      | Alto            | Alto                   | Muy alto              |
+| Rendimiento escritura    | Alto            | Medio                  | Muy alto              |
+| Escalabilidad horizontal | Media           | Media                  | Alta                  |
+| Mejor para               | Web tradicional | Aplicaciones complejas | Big data, tiempo real |
+
+## 🛠️ Troubleshooting
+
+### Error de conexión
 
 ```bash
-chmod +x test.sh
-./test.sh
+# Verificar que la BD esté corriendo
+# MySQL
+brew services list | grep mysql
+sudo systemctl status mysql
+
+# PostgreSQL
+brew services list | grep postgresql
+sudo systemctl status postgresql
+
+# MongoDB
+brew services list | grep mongodb
+sudo systemctl status mongod
 ```
 
-**Note:** Requires `jq` to format the JSON. Install it with:
+### Error de autenticación
 
-- Ubuntu/Debian: `sudo apt-get install jq`
-- macOS: `brew install jq`
-- Or remove `| jq` from the script
+```bash
+# Verificar credenciales en .env
+cat .env
 
-## Architecture
-
-### Project Structure
-
-```
-voting-system/
-├── main.go           # Go server code
-├── index.html        # Web interface
-├── go.mod            # Go dependencies
-├── go.sum            # Dependency checksums
-└── README.md         # This file
+# Recrear usuario (MySQL)
+mysql -u root -p
+DROP USER 'voting_user'@'localhost';
+CREATE USER 'voting_user'@'localhost' IDENTIFIED BY 'voting_password';
 ```
 
-### Technologies Used
+### Puerto en uso
 
-#### Backend
+```bash
+# Cambiar puerto en .env o matar proceso
+lsof -ti:8000 | xargs kill -9
+```
 
-- **Go (Golang)** - Programming language
-- **net/http** - Standard HTTP server
-- **bcrypt** - Password encryption
-- **sync** - Synchronization for thread-safety
+## 🎯 Próximas Mejoras
 
-#### Frontend
-
-- **HTML5** - Structure
-- **Bootstrap 5** - Styles and components
-- **JavaScript (Vanilla)** - Interaction logic
-- **Fetch API** - HTTP calls
-
-### Security Features
-
-- ✅ Passwords encrypted with bcrypt
-- ✅ Token-based authentication
-- ✅ Cryptographically secure random tokens (32 bytes)
-- ✅ Token validation on protected endpoints
-- ✅ One vote per user (backend validation)
-- ✅ CORS enabled for development
-
-## Database
-
-The system uses **in-memory** storage with thread-safe data structures:
-
-- `users` - Map of users by ID
-- `candidates` - Map of candidates by ID (pre-populated)
-- `votes` - Map of votes by ID
-- `tokens` - Map of authentication tokens
-
-**Note:** Data is lost when the server restarts. For production, consider integrating a database like PostgreSQL or MongoDB.
-
-## Predefined Candidates
-
-The system includes three default candidates:
-
-1. **Alice Johnson** (ID: 1)
-2. **Bob Smith** (ID: 2)
-3. **Charlie Brown** (ID: 3)
-
-## Current Limitations
-
-- In-memory database (not persistent)
-- No pagination in results
-- No advanced email validation
-- No password recovery
-- No rate limiting
-- No structured logs
-
-## Future Improvements
-
-- [ ] Integration with a real database (PostgreSQL, MySQL, MongoDB)
-- [ ] Password recovery system
-- [ ] Admin panel
-- [ ] Advanced statistics and charts
-- [ ] Results export (CSV, PDF)
-- [ ] Rate limiting and attack protection
-- [ ] Unit and integration tests
-- [ ] Docker and docker-compose
+- [ ] Tests unitarios e integración
+- [ ] Migrations automáticas
+- [ ] Rate limiting
+- [ ] Panel de administración
+- [ ] Estadísticas avanzadas
+- [ ] Exportación de resultados (CSV, PDF)
+- [ ] Autenticación OAuth
+- [ ] WebSockets para resultados en tiempo real
 - [ ] CI/CD pipeline
-- [ ] Cloud deployment
+- [ ] Kubernetes deployment
 
-## Contributions
+## 📝 Licencia
 
-Contributions are welcome. Please:
+Este proyecto es de código abierto bajo la Licencia MIT.
 
-1. Fork the project
-2. Create a branch for your feature (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 👤 Autor
 
-## License
-
-This project is open source and available under the MIT License.
-
-## Author
-
-Developed as an educational project for a voting system with Go.
-
-## Report Issues
-
-If you find any bugs or have suggestions, please open an issue in the repository.
+Desarrollado como proyecto educativo de sistema de votación con soporte multi-base de datos.
 
 ---
 
-**Happy voting! **
+**¡Sistema de votación listo para usar! 🗳️**
+
+Para comenzar:
+
+1. Ejecuta `./setup_database.sh`
+2. Sigue las instrucciones
+3. Ejecuta `./run.sh`
+4. Abre http://127.0.0.1:8000/swagger/
